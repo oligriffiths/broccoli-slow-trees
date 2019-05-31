@@ -8,45 +8,39 @@ function ellipsize(string, desiredLength) {
   }
 }
 
-module.exports = function printSlowNodes(tree, factor) {
-  try {
-    var summary = calculateSummary(tree);
-    var pcThreshold = factor || 0.05;
-    var msThreshold = pcThreshold * summary.totalTime;
-    var cumulativeLogLines = [];
+function buildSlowNodes(tree, factor) {
+  var summary = calculateSummary(tree);
+  var pcThreshold = factor || 0.05;
+  var msThreshold = pcThreshold * summary.totalTime;
+  var cumulativeLogLines = [];
 
-    var MAX_NAME_CELL_LENGTH = 45;
-    var MAX_VALUE_CELL_LENGTH = 20;
+  var MAX_NAME_CELL_LENGTH = 45;
+  var MAX_VALUE_CELL_LENGTH = 20;
 
 
-    for (var i = 0; i < summary.groupedNodes.length; i++) {
-      var group = summary.groupedNodes[i];
-      var averageStr;
+  for (var i = 0; i < summary.groupedNodes.length; i++) {
+    var group = summary.groupedNodes[i];
+    var averageStr;
 
-      if (group.totalSelfTime > msThreshold) {
-        if (group.count > 1) {
-          averageStr = ' (' + Math.floor(group.averageSelfTime) + ' ms)';
-        } else {
-          averageStr = '';
-        }
-
-        var countStr = ' (' + group.count + ')'
-        var nameStr = ellipsize(group.name, MAX_NAME_CELL_LENGTH - countStr.length)
-
-        cumulativeLogLines.push(pad(nameStr + countStr, MAX_NAME_CELL_LENGTH) + ' | ' + pad(Math.floor(group.totalSelfTime) + 'ms' + averageStr, MAX_VALUE_CELL_LENGTH))
+    if (group.totalSelfTime > msThreshold) {
+      if (group.count > 1) {
+        averageStr = ' (' + Math.floor(group.averageSelfTime) + ' ms)';
+      } else {
+        averageStr = '';
       }
+
+      var countStr = ' (' + group.count + ')'
+      var nameStr = ellipsize(group.name, MAX_NAME_CELL_LENGTH - countStr.length)
+
+      cumulativeLogLines.push(pad(nameStr + countStr, MAX_NAME_CELL_LENGTH) + ' | ' + pad(Math.floor(group.totalSelfTime) + 'ms' + averageStr, MAX_VALUE_CELL_LENGTH))
     }
-
-    cumulativeLogLines.unshift(pad('', MAX_NAME_CELL_LENGTH, '-') + '-+-' + pad('', MAX_VALUE_CELL_LENGTH, '-'))
-    cumulativeLogLines.unshift(pad('Slowest Nodes (totalTime >= ' + (pcThreshold * 100) +'%)', MAX_NAME_CELL_LENGTH) + ' | ' + pad('Total (avg)', MAX_VALUE_CELL_LENGTH))
-
-    console.log('\n' + cumulativeLogLines.join('\n') + '\n')
-  } catch (e) {
-    console.error('Error when printing slow nodes:', e);
-    console.error(e.stack)
   }
-}
 
+  cumulativeLogLines.unshift(pad('', MAX_NAME_CELL_LENGTH, '-') + '-+-' + pad('', MAX_VALUE_CELL_LENGTH, '-'))
+  cumulativeLogLines.unshift(pad('Slowest Nodes (totalTime >= ' + (pcThreshold * 100) +'%)', MAX_NAME_CELL_LENGTH) + ' | ' + pad('Total (avg)', MAX_VALUE_CELL_LENGTH))
+
+  return cumulativeLogLines.join('\n')
+}
 
 function pad(str, len, char, dir) {
   if (!char) { char = ' '}
@@ -70,3 +64,14 @@ function pad(str, len, char, dir) {
 
   return str
 }
+
+module.exports = function printSlowNodes(tree, factor) {
+  try {
+    console.log('\n' + buildSlowNodes(tree, factor) + '\n')
+  } catch (e) {
+    console.error('Error when printing slow nodes:', e);
+    console.error(e.stack)
+  }
+}
+
+module.exports.buildSlowNodes(tree, factor)
