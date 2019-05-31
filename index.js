@@ -74,4 +74,4 @@ module.exports = function printSlowNodes(tree, factor) {
   }
 }
 
-module.exports.buildSlowNodes(tree, factor)
+module.exports.buildSlowNodes = buildSlowNodes(tree, factor)
